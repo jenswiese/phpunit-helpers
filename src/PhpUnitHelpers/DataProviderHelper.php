@@ -1,5 +1,7 @@
 <?php
 
+namespace PhpUnitHelpers;
+
 /**
  * Class DataProviderHelper
  *
@@ -27,6 +29,7 @@ class DataProviderHelper
      */
     public function addCase($title)
     {
+        $this->cases[$title] = array();
         $this->currentCaseTitle = $title;
 
         return $this;
@@ -35,19 +38,20 @@ class DataProviderHelper
     /**
      * Add data to current case
      *
+     * @param string $title
      * @param mixed $mixedData
+     * @throws \UnexpectedValueException
      * @return $this
-     * @throws InvalidArgumentException
      */
-    public function addData($mixedData)
+    public function addData($title, $mixedData)
     {
-        if (is_null($this->currentCaseTitle)) {
-            throw new InvalidArgumentException(
+        if (false === isset($this->cases[$this->currentCaseTitle])) {
+            throw new \UnexpectedValueException(
                 sprintf('You cannot add data - you have to add a case first by using %s->addCase().', __CLASS__)
             );
         }
 
-        $this->cases[$this->currentCaseTitle][] = $mixedData;
+        $this->cases[$this->currentCaseTitle][$title] = $mixedData;
 
         return $this;
     }
@@ -57,6 +61,35 @@ class DataProviderHelper
      */
     public function toArray()
     {
+        $this->validateCases();
+
         return $this->cases;
+    }
+
+    /**
+     * @throws \UnexpectedValueException
+     */
+    protected function validateCases()
+    {
+        $lastDataCount = null;
+
+        foreach ($this->cases as $name => $caseData) {
+            if (0 == count($caseData)) {
+                throw new \UnexpectedValueException(
+                    sprintf('No data for case "%s".', $name)
+                );
+            }
+
+            $isNotFirstIteration = (false === is_null($lastDataCount));
+            $hasDifferentCount = $lastDataCount != count($caseData);
+
+            if ($isNotFirstIteration && $hasDifferentCount) {
+                throw new \UnexpectedValueException(
+                    sprintf('Count of data differs from prior cases in case "%s".', $name)
+                );
+            }
+
+            $lastDataCount = count($caseData);
+        }
     }
 }
