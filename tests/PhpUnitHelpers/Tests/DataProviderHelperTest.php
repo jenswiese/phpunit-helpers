@@ -4,20 +4,30 @@ namespace PhpUnitHelpers\Tests;
 
 use PhpUnitHelpers\DataProviderHelper;
 
+/**
+ * Class DataProviderHelperTest
+ *
+ * @author Jens Wiese <jens@howtrueisfalse.de>
+ */
 class DataProviderHelperTest extends \PHPUnit_Framework_TestCase
 {
     public function testOutputOfArray()
     {
-        $helper = new DataProviderHelper();
+        $helper = new DataProviderHelper(array(
+            'Data 1',
+            'Data 2',
+            'Data 3'
+        ));
+
         $helper
-            ->addCase('Case 1')
-                ->addData('Data 1', 'foo 1')
-                ->addData('Data 2', 'foo 2')
-                ->addData('Data 3', 'foo 3')
-            ->addCase('Case 2')
-                ->addData('Data 1', 'bar 1')
-                ->addData('Data 2', 'bar 2')
-                ->addData('Data 3', 'bar 3');
+            ->addTestCase('Case 1')
+                ->addData('foo 1')
+                ->addData('foo 2')
+                ->addData('foo 3')
+            ->addTestCase('Case 2')
+                ->addData('bar 1')
+                ->addData('bar 2')
+                ->addData('bar 3');
 
         $expectedArray = array(
             'Case 1' => array(
@@ -41,8 +51,8 @@ class DataProviderHelperTest extends \PHPUnit_Framework_TestCase
      */
     public function testAddingDataWithoutCase()
     {
-        $helper = new DataProviderHelper();
-        $helper->addData('Data 1', 'foo 1');
+        $helper = new DataProviderHelper(array('Data 1'));
+        $helper->addData('foo 1');
     }
 
     /**
@@ -51,8 +61,8 @@ class DataProviderHelperTest extends \PHPUnit_Framework_TestCase
      */
     public function testAddingCasesWithoutData()
     {
-        $helper = new DataProviderHelper();
-        $helper->addCase('Case 1')->addCase('Case 2');
+        $helper = new DataProviderHelper(array('Data 1'));
+        $helper->addTestCase('Case 1')->addTestCase('Case 2');
         $helper->toArray();
     }
 
@@ -62,15 +72,34 @@ class DataProviderHelperTest extends \PHPUnit_Framework_TestCase
      */
     public function testDataCountMustBeEqualForAllCases()
     {
-        $helper = new DataProviderHelper();
+        $helper = new DataProviderHelper(array(
+            'Data 1',
+            'Data 2'
+        ));
         $helper
-            ->addCase('Case 1')
-            ->addData('Data 1', 'foo 1')
-            ->addCase('Case 2')
-            ->addData('Data 1', 'bar 1')
-            ->addData('Data 2', 'bar 2');
+            ->addTestCase('Case 1')
+                ->addData('foo 1')
+            ->addTestCase('Case 2')
+                ->addData('bar 1')
+                ->addData('bar 2');
         $helper->toArray();
     }
 
+    /**
+     * @expectedException \UnexpectedValueException
+     * @expectedExceptionMessage You are trying to add data to a parameter that does not exist.
+     */
+    public function testAddDataToNotExistingParamLeadToException()
+    {
+        $helper = new DataProviderHelper(array(
+            'Data 1',
+            'Data 2'
+        ));
+        $helper
+            ->addTestCase('Case 1')
+            ->addData('bar 1')
+            ->addData('bar 2')
+            ->addData('bar 3');
+    }
 }
  

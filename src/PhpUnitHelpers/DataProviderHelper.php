@@ -14,6 +14,11 @@ class DataProviderHelper
     /**
      * @var array
      */
+    protected $structure = array();
+
+    /**
+     * @var array
+     */
     protected $cases = array();
 
     /**
@@ -22,12 +27,24 @@ class DataProviderHelper
     protected $currentCaseTitle;
 
     /**
+     * Takes array of titles for parameters to pass to the test-method,
+     * and defines the structure of the test-cases.
+     *
+     * @param array $structure
+     * @return DataProviderHelper
+     */
+    public function __construct(array $structure)
+    {
+        $this->structure = $structure;
+    }
+
+    /**
      * Add new case
      *
      * @param string $title
      * @return $this
      */
-    public function addCase($title)
+    public function addTestCase($title)
     {
         $this->cases[$title] = array();
         $this->currentCaseTitle = $title;
@@ -38,12 +55,11 @@ class DataProviderHelper
     /**
      * Add data to current case
      *
-     * @param string $title
      * @param mixed $mixedData
      * @throws \UnexpectedValueException
      * @return $this
      */
-    public function addData($title, $mixedData)
+    public function addData($mixedData)
     {
         if (false === isset($this->cases[$this->currentCaseTitle])) {
             throw new \UnexpectedValueException(
@@ -51,7 +67,7 @@ class DataProviderHelper
             );
         }
 
-        $this->cases[$this->currentCaseTitle][$title] = $mixedData;
+        $this->cases[$this->currentCaseTitle][$this->getParamTitle()] = $mixedData;
 
         return $this;
     }
@@ -91,5 +107,20 @@ class DataProviderHelper
 
             $lastDataCount = count($caseData);
         }
+    }
+
+    /**
+     * @return string
+     */
+    protected function getParamTitle()
+    {
+        $nextKey = count($this->cases[$this->currentCaseTitle]);
+        if (false === isset($this->structure[$nextKey])) {
+            throw new \UnexpectedValueException(
+                'You are trying to add data to a parameter that does not exist.'
+            );
+        }
+
+        return (string) $this->structure[$nextKey];
     }
 }
